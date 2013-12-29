@@ -1,23 +1,24 @@
 package com.couldhll.zte;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.ImageFormat;
 import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
-import android.graphics.drawable.BitmapDrawable;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
-import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 
 public class CameraActivity extends Activity {
@@ -26,7 +27,17 @@ public class CameraActivity extends Activity {
 	public static final int CAMERA_FACING = Camera.CameraInfo.CAMERA_FACING_BACK;
 	public static final int MEDIA_TYPE = Config.MEDIA_TYPE_IMAGE;
 	public static final int ANIMATION_START = 0;
-	public static final int ANIMATION_END = 425;
+	public static final int ANIMATION1_END = 451;
+	public static final int ANIMATION2_END = 443;
+	public static final int ANIMATION3_END = 455;
+	public static final int ANIMATION_SHOW = 300;
+	public static final int[] ANIMATION1_CAPTURE = { 194, 220, 411 };
+	public static final int[] ANIMATION2_CAPTURE = { 165, 200, 274 };
+	public static final int[] ANIMATION3_CAPTURE = { 272, 283, 290 };
+
+	private int mSceneIndex;
+	private int mAnimationEndFrame;
+	private int[] mAnimationCaptureFrames;
 
 	private Point mActivitySize;
 	private int mActivityRotation;
@@ -37,6 +48,9 @@ public class CameraActivity extends Activity {
 
 	private CameraPreview mCameraPreview;
 	private ImageView mAnimationView;
+	private AnimationDrawable mAnimationDrawable;
+
+	private ArrayList<File> mSaveFiles;
 
 	private final PictureCallback mPictureCallback = new PictureCallback() {
 		@Override
@@ -45,11 +59,17 @@ public class CameraActivity extends Activity {
 			Bitmap cameraBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
 
 			// animation bitmap
-			Bitmap animationBitmap = ((BitmapDrawable) getResources().getDrawable(R.drawable.day_00100)).getBitmap();
+			mAnimationView.setDrawingCacheEnabled(true);
+			// mAnimationView.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+			// mAnimationView.layout(0, 0, mAnimationView.getMeasuredWidth(), mAnimationView.getMeasuredHeight());
+			mAnimationView.buildDrawingCache(true);
+			Bitmap animationBitmap = Bitmap.createBitmap(mAnimationView.getDrawingCache());
+			mAnimationView.setDrawingCacheEnabled(false);
 
 			// scale animation bitmap
-			int scale = mActivitySize.x / animationBitmap.getWidth();
-			animationBitmap = Bitmap.createScaledBitmap(animationBitmap, scale, scale, true);
+			// Bitmap animationBitmap = ((BitmapDrawable) getResources().getDrawable(R.drawable.day_00425)).getBitmap();
+			// int scale = mActivitySize.x / animationBitmap.getWidth();
+			// animationBitmap = Bitmap.createScaledBitmap(animationBitmap, scale, scale, true);
 
 			// compose bitmap
 			cameraBitmap = cameraBitmap.copy(Bitmap.Config.ARGB_8888, true);// for Bitmap.createBitmap
@@ -62,6 +82,9 @@ public class CameraActivity extends Activity {
 			// save
 			File bitmapFile = Config.getOutputMediaFile(MEDIA_TYPE);
 			Config.saveBitmap(composeBitmap, bitmapFile);
+
+			// add save file to list
+			mSaveFiles.add(bitmapFile);
 
 			// continue preview
 			mCamera.startPreview();
@@ -101,6 +124,37 @@ public class CameraActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
+		// hide button
+		hideButton();
+
+		// get save files
+		Intent intent = getIntent();
+		Bundle bundle = intent.getExtras();
+		if (bundle != null) {
+			mSceneIndex = bundle.getInt("mSceneIndex");
+		} else {
+			mSceneIndex = 1;
+		}
+
+		// init info
+		switch (mSceneIndex) {
+		case 1:
+			mAnimationEndFrame = ANIMATION1_END;
+			mAnimationCaptureFrames = ANIMATION1_CAPTURE;
+			break;
+		case 2:
+			mAnimationEndFrame = ANIMATION2_END;
+			mAnimationCaptureFrames = ANIMATION2_CAPTURE;
+			break;
+		case 3:
+			mAnimationEndFrame = ANIMATION3_END;
+			mAnimationCaptureFrames = ANIMATION3_CAPTURE;
+			break;
+		default:
+			mAnimationEndFrame = ANIMATION1_END;
+			mAnimationCaptureFrames = ANIMATION1_CAPTURE;
+			break;
+		}
 
 		// init activity info
 		mActivitySize = Config.getActivitySize(this);
@@ -133,7 +187,7 @@ public class CameraActivity extends Activity {
 		preview.addView(mCameraPreview);
 
 		// Add a listener to the Capture button
-		Button captureButton = (Button) findViewById(R.id.button_capture);
+		ImageButton captureButton = (ImageButton) findViewById(R.id.captureImageButton);
 		captureButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -143,14 +197,49 @@ public class CameraActivity extends Activity {
 
 		// init animation
 		mAnimationView = (ImageView) findViewById(R.id.animationImageView);
-		AnimationDrawable animationDrawable = new AnimationDrawable();
-		for (int i = ANIMATION_START; i <= ANIMATION_END; i++) {
-			Log.d(TAG, String.format("day_%05d", i));
-			int id = getResources().getIdentifier(String.format("day_%05d", i), "drawable", getApplicationContext().getPackageName());
-			animationDrawable.addFrame(getResources().getDrawable(id), 1000 / 24);
+		mAnimationDrawable = new AnimationDrawable();
+		for (int i = ANIMATION_START; i <= mAnimationEndFrame; i++) {
+			String identifierNameString = String.format("sence%d_%05d", mSceneIndex, i);
+			Log.d(TAG, identifierNameString);
+			int id = getResources().getIdentifier(identifierNameString, "drawable", getApplicationContext().getPackageName());
+			mAnimationDrawable.addFrame(getResources().getDrawable(id), 1000 / 24);
 		}
-		mAnimationView.setImageDrawable(animationDrawable);
-		animationDrawable.start();
+		mAnimationView.setImageDrawable(mAnimationDrawable);
+		// mAnimationDrawable.start();
+
+		// add listener to animation stop
+		CustomAnimDrawable customAnimDrawable = new CustomAnimDrawable(mAnimationDrawable);
+		customAnimDrawable.setAnimationListener(new CustomAnimDrawable.AnimationDrawableListener() {
+			@Override
+			public void onAnimationStart(AnimationDrawable animation) {
+				// TODO Auto-generated method stub
+			}
+
+			@Override
+			public void onAnimationEnd(AnimationDrawable animation) {
+				// show capture&next button
+				// showButton();
+			}
+
+			@Override
+			public void onAnimationFrame(AnimationDrawable animation, int frameIndex) {
+				// show capture&next button
+				if (frameIndex == ANIMATION_SHOW) {
+					showButton();
+				}
+
+				// camera take picture
+				for (int frame : mAnimationCaptureFrames) {
+					if (frameIndex == frame) {
+						mCamera.takePicture(null, null, mPictureCallback);
+					}
+				}
+			}
+		});
+		customAnimDrawable.start();
+
+		// init save file list
+		mSaveFiles = new ArrayList<File>();
 	}
 
 	@Override
@@ -171,5 +260,29 @@ public class CameraActivity extends Activity {
 			mCamera.release(); // release the camera for other applications
 			mCamera = null;
 		}
+	}
+
+	public void gotoNextActivity(View view) {
+		// goto share activity
+		Intent intent = new Intent(CameraActivity.this, ShareActivity.class);
+		intent.putExtra("mSaveFiles", mSaveFiles);
+		startActivity(intent);
+		finish();
+	}
+
+	private void showButton() {
+		ImageButton captureButton = (ImageButton) findViewById(R.id.captureImageButton);
+		captureButton.setVisibility(View.VISIBLE);
+
+		ImageButton nextButton = (ImageButton) findViewById(R.id.nextImageButton);
+		nextButton.setVisibility(View.VISIBLE);
+	}
+
+	private void hideButton() {
+		ImageButton captureButton = (ImageButton) findViewById(R.id.captureImageButton);
+		captureButton.setVisibility(View.GONE);
+
+		ImageButton nextButton = (ImageButton) findViewById(R.id.nextImageButton);
+		nextButton.setVisibility(View.GONE);
 	}
 }
