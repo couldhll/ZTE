@@ -2,6 +2,8 @@ package com.couldhll.zte;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -11,9 +13,12 @@ import android.graphics.Canvas;
 import android.graphics.ImageFormat;
 import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -30,14 +35,15 @@ public class CameraActivity extends Activity {
 	public static final int ANIMATION1_END = 451;
 	public static final int ANIMATION2_END = 443;
 	public static final int ANIMATION3_END = 455;
-	public static final int ANIMATION_SHOW = 300;
-	public static final int[] ANIMATION1_CAPTURE = { 194, 220, 411 };
-	public static final int[] ANIMATION2_CAPTURE = { 165, 200, 274 };
-	public static final int[] ANIMATION3_CAPTURE = { 272, 283, 290 };
+
+	// public static final int ANIMATION_SHOW = 300;
+	// public static final int[] ANIMATION1_CAPTURE = { 194, 220, 411 };
+	// public static final int[] ANIMATION2_CAPTURE = { 165, 200, 274 };
+	// public static final int[] ANIMATION3_CAPTURE = { 272, 283, 290 };
+	// private int[] mAnimationCaptureFrames;
 
 	private int mSceneIndex;
 	private int mAnimationEndFrame;
-	private int[] mAnimationCaptureFrames;
 
 	private Point mActivitySize;
 	private int mActivityRotation;
@@ -124,6 +130,7 @@ public class CameraActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
+
 		// hide button
 		hideButton();
 
@@ -140,19 +147,19 @@ public class CameraActivity extends Activity {
 		switch (mSceneIndex) {
 		case 1:
 			mAnimationEndFrame = ANIMATION1_END;
-			mAnimationCaptureFrames = ANIMATION1_CAPTURE;
+			// mAnimationCaptureFrames = ANIMATION1_CAPTURE;
 			break;
 		case 2:
 			mAnimationEndFrame = ANIMATION2_END;
-			mAnimationCaptureFrames = ANIMATION2_CAPTURE;
+			// mAnimationCaptureFrames = ANIMATION2_CAPTURE;
 			break;
 		case 3:
 			mAnimationEndFrame = ANIMATION3_END;
-			mAnimationCaptureFrames = ANIMATION3_CAPTURE;
+			// mAnimationCaptureFrames = ANIMATION3_CAPTURE;
 			break;
 		default:
 			mAnimationEndFrame = ANIMATION1_END;
-			mAnimationCaptureFrames = ANIMATION1_CAPTURE;
+			// mAnimationCaptureFrames = ANIMATION1_CAPTURE;
 			break;
 		}
 
@@ -205,38 +212,57 @@ public class CameraActivity extends Activity {
 			mAnimationDrawable.addFrame(getResources().getDrawable(id), 1000 / 24);
 		}
 		mAnimationView.setImageDrawable(mAnimationDrawable);
-		// mAnimationDrawable.start();
+		mAnimationDrawable.start();
 
-		// add listener to animation stop
-		CustomAnimDrawable customAnimDrawable = new CustomAnimDrawable(mAnimationDrawable);
-		customAnimDrawable.setAnimationListener(new CustomAnimDrawable.AnimationDrawableListener() {
+		// hide loading
+		// ProgressBar loadingProgressBar = (ProgressBar) findViewById(R.id.loadingProgressBar);
+		// loadingProgressBar.setVisibility(View.GONE);
+
+		// show capture&next button
+		final Handler handler = new Handler();
+		Timer timer = new Timer();
+		timer.schedule(new TimerTask() {
 			@Override
-			public void onAnimationStart(AnimationDrawable animation) {
-				// TODO Auto-generated method stub
-			}
-
-			@Override
-			public void onAnimationEnd(AnimationDrawable animation) {
-				// show capture&next button
-				// showButton();
-			}
-
-			@Override
-			public void onAnimationFrame(AnimationDrawable animation, int frameIndex) {
-				// show capture&next button
-				if (frameIndex == ANIMATION_SHOW) {
-					showButton();
-				}
-
-				// camera take picture
-				for (int frame : mAnimationCaptureFrames) {
-					if (frameIndex == frame) {
-						mCamera.takePicture(null, null, mPictureCallback);
+			public void run() {
+				handler.post(new Runnable() {
+					@Override
+					public void run() {
+						showButton();
 					}
-				}
+				});
 			}
-		});
-		customAnimDrawable.start();
+		}, 1000 * 10);
+
+		// // add listener to animation stop
+		// CustomAnimDrawable customAnimDrawable = new CustomAnimDrawable(mAnimationDrawable);
+		// customAnimDrawable.setAnimationListener(new CustomAnimDrawable.AnimationDrawableListener() {
+		// @Override
+		// public void onAnimationStart(AnimationDrawable animation) {
+		// // TODO Auto-generated method stub
+		// }
+		//
+		// @Override
+		// public void onAnimationEnd(AnimationDrawable animation) {
+		// // show capture&next button
+		// // showButton();
+		// }
+		//
+		// @Override
+		// public void onAnimationFrame(AnimationDrawable animation, int frameIndex) {
+		// // // show capture&next button
+		// // if (frameIndex == ANIMATION_SHOW) {
+		// // showButton();
+		// // }
+		// //
+		// // // camera take picture
+		// // for (int frame : mAnimationCaptureFrames) {
+		// // if (frameIndex == frame) {
+		// // mCamera.takePicture(null, null, mPictureCallback);
+		// // }
+		// // }
+		// }
+		// });
+		// customAnimDrawable.start();
 
 		// init save file list
 		mSaveFiles = new ArrayList<File>();
@@ -253,6 +279,7 @@ public class CameraActivity extends Activity {
 	protected void onPause() {
 		super.onPause();
 		releaseCamera(); // release the camera immediately on pause event
+		releaseAnimation(); // release the animation immediately on pause event
 	}
 
 	private void releaseCamera() {
@@ -260,6 +287,18 @@ public class CameraActivity extends Activity {
 			mCamera.release(); // release the camera for other applications
 			mCamera = null;
 		}
+	}
+
+	private void releaseAnimation() {
+		mAnimationDrawable.stop();
+		for (int i = 0; i < mAnimationDrawable.getNumberOfFrames(); ++i) {
+			Drawable frame = mAnimationDrawable.getFrame(i);
+			if (frame instanceof BitmapDrawable) {
+				((BitmapDrawable) frame).getBitmap().recycle();
+			}
+			frame.setCallback(null);
+		}
+		mAnimationDrawable.setCallback(null);
 	}
 
 	public void gotoNextActivity(View view) {

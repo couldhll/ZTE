@@ -25,9 +25,9 @@ public class CustomAnimDrawable extends AnimationDrawable {
 		mStarted = false;
 		mHandler = new Handler();
 		mEndRunnable = new AnimEndListenerRunnable();
-		for (int i = 0; i < mOriAnim.getNumberOfFrames(); i++) {
-			mSelf.addFrame(mOriAnim.getFrame(i), mOriAnim.getDuration(i));
-		}
+		// for (int i = 0; i < mOriAnim.getNumberOfFrames(); i++) {
+		// mSelf.addFrame(mOriAnim.getFrame(i), mOriAnim.getDuration(i));
+		// }
 	}
 
 	@Override

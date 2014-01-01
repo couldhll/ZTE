@@ -113,7 +113,7 @@ public class Config {
 	public static void saveBitmap(Bitmap bitmap, File file) {
 		try {
 			FileOutputStream fos = new FileOutputStream(file);
-			bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+			bitmap.compress(Bitmap.CompressFormat.JPEG, 80, fos);
 			fos.flush();// output
 			fos.close();
 		} catch (FileNotFoundException e) {

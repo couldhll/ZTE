@@ -34,4 +34,11 @@
         android:background="@drawable/next_button"
         android:contentDescription="TODO"
         android:onClick="gotoNextActivity" />
+    <!--
+         <ProgressBar
+        android:id="@+id/loadingProgressBar"
+        style="@android:style/Widget.ProgressBar.Large"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    -->
 </RelativeLayout>
