@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.DropboxAPI.DropboxLink;
@@ -226,5 +227,11 @@ public class ShareActivity extends Activity {
 		}
 
 		return session;
+	}
+
+	public void hideLoading() {
+		// hide loading
+		ProgressBar loadingProgressBar = (ProgressBar) findViewById(R.id.loadingProgressBar);
+		loadingProgressBar.setVisibility(View.GONE);
 	}
 }

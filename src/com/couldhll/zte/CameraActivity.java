@@ -25,6 +25,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 public class CameraActivity extends Activity {
 	private static final String TAG = "CameraActivity";
@@ -202,36 +203,76 @@ public class CameraActivity extends Activity {
 			}
 		});
 
-		// init animation
-		mAnimationView = (ImageView) findViewById(R.id.animationImageView);
-		mAnimationDrawable = new AnimationDrawable();
-		for (int i = ANIMATION_START; i <= mAnimationEndFrame; i++) {
-			String identifierNameString = String.format("sence%d_%05d", mSceneIndex, i);
-			Log.d(TAG, identifierNameString);
-			int id = getResources().getIdentifier(identifierNameString, "drawable", getApplicationContext().getPackageName());
-			mAnimationDrawable.addFrame(getResources().getDrawable(id), 1000 / 24);
-		}
-		mAnimationView.setImageDrawable(mAnimationDrawable);
-		mAnimationDrawable.start();
-
-		// hide loading
-		// ProgressBar loadingProgressBar = (ProgressBar) findViewById(R.id.loadingProgressBar);
-		// loadingProgressBar.setVisibility(View.GONE);
-
-		// show capture&next button
-		final Handler handler = new Handler();
-		Timer timer = new Timer();
-		timer.schedule(new TimerTask() {
+		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				handler.post(new Runnable() {
+				// init animation
+				mAnimationView = (ImageView) findViewById(R.id.animationImageView);
+				mAnimationDrawable = new AnimationDrawable();
+				for (int i = ANIMATION_START; i <= mAnimationEndFrame; i++) {
+					String identifierNameString = String.format("sence%d_%05d", mSceneIndex, i);
+					Log.d(TAG, identifierNameString);
+					int id = getResources().getIdentifier(identifierNameString, "drawable", getApplicationContext().getPackageName());
+					mAnimationDrawable.addFrame(getResources().getDrawable(id), 1000 / 24);
+				}
+				mAnimationView.post(new Runnable() {
 					@Override
 					public void run() {
-						showButton();
+						mAnimationView.setImageDrawable(mAnimationDrawable);
+						mAnimationDrawable.start();
+
+						// hide loading
+						hideLoading();
+
+						// show capture&next button
+						final Handler handler = new Handler();
+						Timer timer = new Timer();
+						timer.schedule(new TimerTask() {
+							@Override
+							public void run() {
+								handler.post(new Runnable() {
+									@Override
+									public void run() {
+										showButton();
+									}
+								});
+							}
+						}, 1000 * 10);
 					}
 				});
 			}
-		}, 1000 * 10);
+		}).start();
+
+		// // init animation
+		// mAnimationView = (ImageView) findViewById(R.id.animationImageView);
+		// mAnimationDrawable = new AnimationDrawable();
+		// for (int i = ANIMATION_START; i <= mAnimationEndFrame; i++) {
+		// String identifierNameString = String.format("sence%d_%05d", mSceneIndex, i);
+		// Log.d(TAG, identifierNameString);
+		// int id = getResources().getIdentifier(identifierNameString, "drawable", getApplicationContext().getPackageName());
+		// mAnimationDrawable.addFrame(getResources().getDrawable(id), 1000 / 24);
+		// }
+		// mAnimationView.setImageDrawable(mAnimationDrawable);
+		// mAnimationDrawable.start();
+
+		// // hide loading
+		// ProgressBar loadingProgressBar = (ProgressBar) findViewById(R.id.loadingProgressBar);
+		// loadingProgressBar.setVisibility(View.GONE);
+
+		// // show capture&next button
+		// final Handler handler = new Handler();
+		// Timer timer = new Timer();
+		// timer.schedule(new TimerTask() {
+		// @Override
+		// public void run() {
+		// handler.post(new Runnable() {
+		// @Override
+		// public void run() {
+		// showButton();
+		// }
+		// });
+		// }
+		// }, 1000 * 10);
 
 		// // add listener to animation stop
 		// CustomAnimDrawable customAnimDrawable = new CustomAnimDrawable(mAnimationDrawable);
@@ -301,6 +342,12 @@ public class CameraActivity extends Activity {
 		mAnimationDrawable.setCallback(null);
 	}
 
+	public void replayAnimation(View view) {
+		mAnimationDrawable.stop();
+		mAnimationDrawable.selectDrawable(0);
+		mAnimationDrawable.start();
+	}
+
 	public void gotoNextActivity(View view) {
 		// goto share activity
 		Intent intent = new Intent(CameraActivity.this, ShareActivity.class);
@@ -313,6 +360,9 @@ public class CameraActivity extends Activity {
 		ImageButton captureButton = (ImageButton) findViewById(R.id.captureImageButton);
 		captureButton.setVisibility(View.VISIBLE);
 
+		ImageButton replayButton = (ImageButton) findViewById(R.id.replayImageButton);
+		replayButton.setVisibility(View.VISIBLE);
+
 		ImageButton nextButton = (ImageButton) findViewById(R.id.nextImageButton);
 		nextButton.setVisibility(View.VISIBLE);
 	}
@@ -321,7 +371,16 @@ public class CameraActivity extends Activity {
 		ImageButton captureButton = (ImageButton) findViewById(R.id.captureImageButton);
 		captureButton.setVisibility(View.GONE);
 
+		ImageButton replayButton = (ImageButton) findViewById(R.id.replayImageButton);
+		replayButton.setVisibility(View.GONE);
+
 		ImageButton nextButton = (ImageButton) findViewById(R.id.nextImageButton);
 		nextButton.setVisibility(View.GONE);
+	}
+
+	public void hideLoading() {
+		// hide loading
+		ProgressBar loadingProgressBar = (ProgressBar) findViewById(R.id.loadingProgressBar);
+		loadingProgressBar.setVisibility(View.GONE);
 	}
 }

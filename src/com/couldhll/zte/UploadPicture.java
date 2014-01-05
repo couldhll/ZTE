@@ -37,6 +37,8 @@ import com.dropbox.client2.exception.DropboxUnlinkedException;
  */
 public class UploadPicture extends AsyncTask<Void, Long, Boolean> {
 
+	private final Context mActivity;
+
 	private final DropboxAPI<?> mApi;
 	private final String mPath;
 	private final File mFile;
@@ -49,6 +51,7 @@ public class UploadPicture extends AsyncTask<Void, Long, Boolean> {
 	private String mErrorMsg;
 
 	public UploadPicture(Context context, DropboxAPI<?> api, String dropboxPath, File file) {
+		mActivity = context;
 		// We set the context this way so we don't accidentally leak activities
 		mContext = context.getApplicationContext();
 
@@ -155,6 +158,10 @@ public class UploadPicture extends AsyncTask<Void, Long, Boolean> {
 		} else {
 			showToast(mErrorMsg);
 		}
+
+		// hide loading
+		ShareActivity shareActivity = (ShareActivity) mActivity;
+		shareActivity.hideLoading();
 	}
 
 	private void showToast(String msg) {

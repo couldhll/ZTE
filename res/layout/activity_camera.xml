@@ -31,14 +31,23 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:background="@drawable/next_button"
+        android:background="@drawable/upload_button"
         android:contentDescription="TODO"
         android:onClick="gotoNextActivity" />
-    <!--
-         <ProgressBar
+    <ImageButton
+        android:id="@+id/replayImageButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/nextImageButton"
+        android:layout_alignParentRight="true"
+        android:background="@drawable/replay_button"
+        android:contentDescription="TODO"
+        android:onClick="replayAnimation" />
+    <ProgressBar
         android:id="@+id/loadingProgressBar"
         style="@android:style/Widget.ProgressBar.Large"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-    -->
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true" />
 </RelativeLayout>

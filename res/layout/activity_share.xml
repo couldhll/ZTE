@@ -23,4 +23,11 @@
         android:layout_alignParentTop="true"
         android:layout_marginLeft="60dp"
         android:layout_marginTop="76dp" />
+    <ProgressBar
+        android:id="@+id/loadingProgressBar"
+        style="@android:style/Widget.ProgressBar.Large"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true" />
 </RelativeLayout>
